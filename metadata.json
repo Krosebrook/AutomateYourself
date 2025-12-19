@@ -1,0 +1,8 @@
+{
+  "name": "AI Automation Architect",
+  "description": "Generate powerful AI-driven workflows for Zapier, n8n, LangChain, and more using advanced Gemini models.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
