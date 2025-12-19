@@ -35,4 +35,17 @@ export interface VoiceModel {
   id: string;
   name: string;
   description: string;
+  type: string;
+}
+
+export interface ApiError {
+  message: string;
+  code?: string | number;
+  details?: any;
+}
+
+export interface AsyncState<T> {
+  data: T | null;
+  loading: boolean;
+  error: ApiError | null;
 }

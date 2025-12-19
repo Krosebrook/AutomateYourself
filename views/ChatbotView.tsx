@@ -11,6 +11,8 @@ const ChatbotView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const MAX_HISTORY = 20;
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -22,29 +24,47 @@ const ChatbotView: React.FC = () => {
     if (!trimmedInput || loading) return;
 
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: `u-${Date.now()}`,
       role: 'user',
       content: trimmedInput,
       timestamp: Date.now()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const updated = [...prev, userMessage];
+      // Edge Case: Cap history to prevent UI sluggishness and huge context payloads
+      if (updated.length > MAX_HISTORY * 2) {
+        return updated.slice(-MAX_HISTORY * 2);
+      }
+      return updated;
+    });
+
     setInput('');
     setLoading(true);
 
     try {
+      // In a real production app, we would pass 'messages' to the service to maintain state
       const response = await chatWithAssistant(trimmedInput);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
+      
+      const assistantMessage: ChatMessage = {
+        id: `a-${Date.now()}`,
         role: 'model',
         content: response,
         timestamp: Date.now()
-      }]);
-    } catch (err) {
+      };
+
+      setMessages(prev => {
+        const updated = [...prev, assistantMessage];
+        if (updated.length > MAX_HISTORY * 2) {
+          return updated.slice(-MAX_HISTORY * 2);
+        }
+        return updated;
+      });
+    } catch (err: any) {
       setMessages(prev => [...prev, {
-        id: 'err-' + Date.now(),
+        id: `e-${Date.now()}`,
         role: 'model',
-        content: "Oops! My neural pathways are a bit tangled. Can you try that again?",
+        content: err.message || "Oops! My neural pathways are a bit tangled. Can you try that again?",
         timestamp: Date.now()
       }]);
     } finally {
@@ -86,7 +106,7 @@ const ChatbotView: React.FC = () => {
           )}
 
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
               <div className={`flex gap-3 max-w-[85%] sm:max-w-[75%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
                   msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-100 text-gray-600'
@@ -98,7 +118,7 @@ const ChatbotView: React.FC = () => {
                     ? 'bg-indigo-600 text-white rounded-tr-none' 
                     : 'bg-white text-gray-800 rounded-tl-none border border-gray-50'
                 }`}>
-                  {msg.content}
+                  <div className="whitespace-pre-wrap">{msg.content}</div>
                   <div className={`mt-2 text-[10px] font-medium opacity-50 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
@@ -126,14 +146,15 @@ const ChatbotView: React.FC = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Ask anything..."
-              className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all pr-16"
+              disabled={loading}
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all pr-16 disabled:opacity-50"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || loading}
-              className="absolute right-2 top-2 bottom-2 bg-indigo-600 text-white px-4 rounded-xl hover:bg-indigo-700 disabled:bg-gray-100 disabled:text-gray-300 transition-all shadow-lg shadow-indigo-500/10 active:scale-95"
+              className="absolute right-2 top-2 bottom-2 bg-indigo-600 text-white px-4 rounded-xl hover:bg-indigo-700 disabled:bg-gray-100 disabled:text-gray-300 transition-all shadow-lg shadow-indigo-500/10 active:scale-95 flex items-center justify-center"
             >
-              <Send size={18} />
+              {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             </button>
           </div>
           <p className="text-[10px] text-gray-400 mt-3 text-center uppercase tracking-widest font-bold">
