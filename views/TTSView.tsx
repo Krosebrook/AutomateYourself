@@ -1,6 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { generateSpeech, decodeAudio, createAudioBuffer } from '../services/geminiService';
+// Fix: Corrected imported function names from geminiService
+import { generateSpeech, decode, decodeAudioData } from '../services/geminiService';
 import { Card } from '../components/ui/Card';
 import { VoiceModel } from '../types';
 import { Mic2, Play, Download, Loader2, Music, Volume2, AlertTriangle } from 'lucide-react';
@@ -39,8 +40,9 @@ const TTSView: React.FC = () => {
           await audioContext.resume();
         }
 
-        const audioBytes = decodeAudio(base64Data);
-        const buffer = await createAudioBuffer(audioBytes, audioContext);
+        // Fix: Use decode and decodeAudioData with correct parameters
+        const audioBytes = decode(base64Data);
+        const buffer = await decodeAudioData(audioBytes, audioContext, 24000, 1);
         
         const wavBlob = bufferToWav(buffer);
         const url = URL.createObjectURL(wavBlob);

@@ -1,12 +1,7 @@
 
-import { GoogleGenAI, Type, Modality, GenerateContentParameters } from "@google/genai";
-import { Platform, AutomationResult } from "../types";
+import { GoogleGenAI, Type, Modality, GenerateContentParameters, LiveServerMessage } from "@google/genai";
+import { Platform, AutomationResult, SimulationResponse } from "../types";
 
-/**
- * Utility to create a fresh AI instance.
- * Guidelines: "Create a new GoogleGenAI instance right before making an API call".
- * Edge Case: Throws early if API key is missing to prevent obscure SDK errors.
- */
 const getAiClient = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
@@ -15,10 +10,6 @@ const getAiClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-/**
- * Robust wrapper for AI calls with exponential backoff for transient errors.
- * Edge Cases: Handles 429 (Rate Limit) and 5xx (Server) errors with retries.
- */
 async function callGemini<T>(
   operation: () => Promise<T>,
   retries = 2,
@@ -31,33 +22,27 @@ async function callGemini<T>(
     const isRetryable = status === 429 || (status >= 500 && status < 600);
     
     if (isRetryable && retries > 0) {
-      console.warn(`Transient error (${status}). Retrying in ${delay}ms... Attempts left: ${retries}`);
       await new Promise(res => setTimeout(res, delay));
       return callGemini(operation, retries - 1, delay * 2);
     }
-    
-    // Non-retryable or exhausted retries
-    const errorMessage = error.message || "An unexpected error occurred in the AI service.";
-    throw new Error(errorMessage);
+    const userMessage = status === 429 
+      ? "Service is temporarily overloaded. Please wait a moment." 
+      : (error.message || "An unexpected error occurred in the AI service.");
+    throw new Error(userMessage);
   }
 }
 
 export const generateAutomation = async (platform: Platform, description: string): Promise<AutomationResult> => {
-  // Edge Case: Prevent massive payloads that might break context or cost excessive tokens
-  if (description.length > 4000) {
-    throw new Error("Input payload exceeds the architectural limit of 4,000 characters.");
-  }
-
   return callGemini(async () => {
     const ai = getAiClient();
-    
     const params: GenerateContentParameters = {
       model: 'gemini-3-pro-preview',
-      contents: `Build a production-grade automation workflow for ${platform}. Requirements: ${description}`,
+      contents: `Build a production-grade automation workflow for ${platform} based on these requirements: ${description}. Use Google Search to verify the latest API endpoints.`,
       config: {
-        systemInstruction: "You are an Elite Solutions Architect. Output ONLY a valid JSON object matching the provided schema. Do not include markdown blocks like ```json.",
+        systemInstruction: "You are an Elite Solutions Architect. Output ONLY a valid JSON object matching the provided schema.",
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 4000 },
+        thinkingConfig: { thinkingBudget: 8000 },
+        tools: [{ googleSearch: {} }],
         responseSchema: {
           type: Type.OBJECT,
           properties: {
@@ -72,10 +57,7 @@ export const generateAutomation = async (platform: Platform, description: string
                   id: { type: Type.INTEGER },
                   title: { type: Type.STRING },
                   description: { type: Type.STRING },
-                  type: { 
-                    type: Type.STRING,
-                    description: 'One of: trigger, action, logic'
-                  }
+                  type: { type: Type.STRING }
                 },
                 required: ["id", "title", "description", "type"]
               }
@@ -86,22 +68,66 @@ export const generateAutomation = async (platform: Platform, description: string
       }
     };
 
-    const result = await ai.models.generateContent(params);
-    const text = result.text;
+    const response = await ai.models.generateContent(params);
+    const text = response.text;
     if (!text) throw new Error("The AI returned an empty response.");
     
-    try {
-      // Edge Case: Handle potential trailing/leading whitespace or markdown artifacts
-      const sanitized = text.trim().replace(/^```json/, '').replace(/```$/, '');
-      return JSON.parse(sanitized) as AutomationResult;
-    } catch (e) {
-      console.error("JSON Parse Error on Response:", text);
-      throw new Error("Failed to parse the architect's blueprint. The generated JSON was malformed.");
-    }
+    const parsed = JSON.parse(text.trim()) as AutomationResult;
+    const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
+      ?.filter(chunk => chunk.web)
+      .map(chunk => ({
+        title: chunk.web?.title || "Reference Source",
+        uri: chunk.web?.uri || ""
+      })) || [];
+
+    return { ...parsed, sources };
   });
 };
 
-export const chatWithAssistant = async (message: string, history: any[] = []): Promise<string> => {
+export const simulateAutomation = async (automation: AutomationResult, inputData: string): Promise<SimulationResponse> => {
+  return callGemini(async () => {
+    const ai = getAiClient();
+    const result = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Simulate the following ${automation.platform} automation:
+      Steps: ${JSON.stringify(automation.steps)}
+      Input Data: ${inputData}
+      
+      Determine how each step processes this data. Be realistic about API behaviors and logical branches.`,
+      config: {
+        systemInstruction: "You are a Logic Simulation Engine. Analyze the input data against the automation steps and provide a step-by-step trace of execution. Return ONLY JSON.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            overallStatus: { type: Type.STRING, enum: ['success', 'failure'] },
+            summary: { type: Type.STRING },
+            stepResults: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  stepId: { type: Type.INTEGER },
+                  status: { type: Type.STRING, enum: ['success', 'failure', 'skipped'] },
+                  output: { type: Type.STRING },
+                  reasoning: { type: Type.STRING }
+                },
+                required: ["stepId", "status", "output", "reasoning"]
+              }
+            }
+          },
+          required: ["overallStatus", "summary", "stepResults"]
+        }
+      }
+    });
+
+    const text = result.text;
+    if (!text) throw new Error("Simulation failed to generate output.");
+    return JSON.parse(text.trim()) as SimulationResponse;
+  });
+};
+
+export const chatWithAssistant = async (message: string): Promise<string> => {
   return callGemini(async () => {
     const ai = getAiClient();
     const result = await ai.models.generateContent({
@@ -132,14 +158,11 @@ export const analyzeImage = async (base64Data: string, prompt: string, mimeType:
 };
 
 export const generateSpeech = async (text: string, voiceName: string): Promise<string | undefined> => {
-  // Edge Case: Gemini TTS has limits on input length.
-  const truncatedText = text.slice(0, 1000); 
-
   return callGemini(async () => {
     const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: truncatedText }] }],
+      contents: [{ parts: [{ text }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
@@ -153,7 +176,16 @@ export const generateSpeech = async (text: string, voiceName: string): Promise<s
   });
 };
 
-export const decodeAudio = (base64: string): Uint8Array => {
+export function encode(bytes: Uint8Array) {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+export function decode(base64: string) {
   const binaryString = atob(base64);
   const len = binaryString.length;
   const bytes = new Uint8Array(len);
@@ -161,14 +193,14 @@ export const decodeAudio = (base64: string): Uint8Array => {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes;
-};
+}
 
-export const createAudioBuffer = async (
-  data: Uint8Array, 
-  ctx: AudioContext, 
-  sampleRate = 24000, 
-  numChannels = 1
-): Promise<AudioBuffer> => {
+export async function decodeAudioData(
+  data: Uint8Array,
+  ctx: AudioContext,
+  sampleRate: number,
+  numChannels: number,
+): Promise<AudioBuffer> {
   const dataInt16 = new Int16Array(data.buffer);
   const frameCount = dataInt16.length / numChannels;
   const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
@@ -180,4 +212,24 @@ export const createAudioBuffer = async (
     }
   }
   return buffer;
+}
+
+export const connectToLiveArchitect = (callbacks: {
+  onopen: () => void;
+  onmessage: (message: LiveServerMessage) => void;
+  onerror: (e: ErrorEvent) => void;
+  onclose: (e: CloseEvent) => void;
+}) => {
+  const ai = getAiClient();
+  return ai.live.connect({
+    model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    callbacks,
+    config: {
+      responseModalities: [Modality.AUDIO],
+      speechConfig: {
+        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
+      },
+      systemInstruction: 'You are an Elite Automation Architect. Help the user design complex API automations. Use a professional, tech-savvy voice.',
+    },
+  });
 };

@@ -12,17 +12,15 @@ import {
   Copy, 
   AlertCircle, 
   X,
-  Info,
-  AlertTriangle,
   Lightbulb,
-  ShieldCheck,
   Terminal,
   Zap,
   Box,
   Cpu,
   Layers,
   Check,
-  ArrowRight
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 
 const MIN_DESCRIPTION_LENGTH = 20;
@@ -44,41 +42,65 @@ const AutomationGeneratorView: React.FC = () => {
       id: 'zapier', 
       label: 'Zapier', 
       tagline: 'Connect 5,000+ Apps',
-      logo: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc48?auto=format&fit=crop&q=80&w=300&h=200', 
+      logo: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=400&h=250', 
       color: 'bg-[#FF4A00]', 
-      tooltip: 'The gold standard for no-code SaaS connectivity. Best for teams that need to sync common business tools like Salesforce, Slack, and Google Sheets instantly without technical overhead.' 
+      tooltip: 'The gold standard for no-code SaaS connectivity. Best for teams that need to sync common business tools like Salesforce, Slack, and Google Sheets instantly.' 
     },
     { 
       id: 'n8n', 
       label: 'n8n.io', 
       tagline: 'Custom Logic Nodes',
-      logo: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=300&h=200', 
+      logo: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=400&h=250', 
       color: 'bg-[#FF6D5A]', 
-      tooltip: 'A powerful, fair-code workflow tool that thrives in self-hosted environments. Ideal for technical users who need granular control over data flow and custom JavaScript execution.' 
+      tooltip: 'A powerful, fair-code workflow tool that thrives in self-hosted environments. Ideal for technical users who need granular control over data flow.' 
     },
     { 
       id: 'make', 
       label: 'Make', 
       tagline: 'Visual Data Mapping',
-      logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=300&h=200', 
+      logo: 'https://images.unsplash.com/photo-1551288049-bbbda5366392?auto=format&fit=crop&q=80&w=400&h=250', 
       color: 'bg-[#8A2BE2]', 
-      tooltip: 'Highly visual drag-and-drop builder with exceptional data parsing capabilities. Use this for complex multi-branching logic and scenarios requiring advanced iterative operations.' 
+      tooltip: 'Highly visual drag-and-drop builder with exceptional data parsing capabilities. Use this for complex multi-branching logic and scenarios.' 
     },
     { 
       id: 'langchain', 
       label: 'LangChain', 
       tagline: 'AI Agent Orchestrator',
-      logo: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=300&h=200', 
+      logo: 'https://images.unsplash.com/photo-1620712943543-bcc4628c940c?auto=format&fit=crop&q=80&w=400&h=250', 
       color: 'bg-[#00A67E]', 
-      tooltip: 'The framework of choice for LLM applications. Optimized for building autonomous agents, RAG pipelines, and complex chains of thought across multiple AI providers.' 
+      tooltip: 'The framework of choice for LLM applications. Optimized for building autonomous agents, RAG pipelines, and complex chains of thought.' 
+    },
+    { 
+      id: 'google-sheets', 
+      label: 'Google Sheets', 
+      tagline: 'Cloud Spreadsheet Hub',
+      logo: 'https://images.unsplash.com/photo-1586282391124-7467323ebe94?auto=format&fit=crop&q=80&w=400&h=250', 
+      color: 'bg-[#0F9D58]', 
+      tooltip: 'Universal data storage and reporting. Ideal for lightweight CRM functionality, automated data logging from multiple sources, and collaborative tracking.' 
+    },
+    { 
+      id: 'airtable', 
+      label: 'Airtable', 
+      tagline: 'Relational Database Power',
+      logo: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=400&h=250', 
+      color: 'bg-[#18BFFF]', 
+      tooltip: 'Hybrid spreadsheet-database. Perfect for custom data models, internal tools, and building project management systems with rich relational logic.' 
+    },
+    { 
+      id: 'shopify', 
+      label: 'Shopify', 
+      tagline: 'E-commerce Ecosystem',
+      logo: 'https://images.unsplash.com/photo-1523474253046-2cd2c78b6ad1?auto=format&fit=crop&q=80&w=400&h=250', 
+      color: 'bg-[#95BF47]', 
+      tooltip: 'Scalable online retail management. Use this to automate e-commerce tasks like inventory sync, order fulfillment notifications, and customer loyalty flows.' 
     },
     { 
       id: 'pipedream', 
       label: 'Pipedream', 
       tagline: 'Developer API Control',
-      logo: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=300&h=200', 
+      logo: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc48?auto=format&fit=crop&q=80&w=400&h=250', 
       color: 'bg-[#191970]', 
-      tooltip: 'The production-ready serverless platform for developers. Write custom Node.js/Python code to connect any API with a built-in KV store and event-driven architecture.' 
+      tooltip: 'The production-ready serverless platform for developers. Best for custom code integrations, serverless workflows, and granular API event handling.' 
     },
   ];
 
@@ -145,17 +167,17 @@ const AutomationGeneratorView: React.FC = () => {
                 <Box size={14} className="text-indigo-400" />
                 1. Target Infrastructure
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[440px] overflow-y-auto pr-1 custom-scrollbar p-1">
                 {platforms.map((p) => {
                   const isSelected = platform === p.id;
                   return (
                     <button
                       key={p.id}
                       onClick={() => setPlatform(p.id)}
-                      className={`relative flex flex-col items-start p-0 rounded-2xl border transition-all duration-500 group min-h-[160px] overflow-hidden outline-none active:scale-[0.98] ${
+                      className={`relative flex flex-col items-start p-0 rounded-2xl border transition-all duration-300 group min-h-[160px] overflow-hidden outline-none active:scale-[0.98] ${
                         isSelected 
-                          ? 'bg-white border-indigo-600 ring-2 ring-indigo-600/20 shadow-2xl shadow-indigo-500/20' 
-                          : 'bg-white border-gray-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-gray-200/50'
+                          ? 'bg-white border-indigo-600 ring-2 ring-indigo-600/20 shadow-2xl shadow-indigo-500/20 scale-[1.02] -translate-y-1' 
+                          : 'bg-white border-gray-100 hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:scale-[1.02] hover:-translate-y-1'
                       }`}
                     >
                       <div className="w-full h-24 relative overflow-hidden shrink-0">
@@ -181,19 +203,13 @@ const AutomationGeneratorView: React.FC = () => {
                           {p.tagline}
                         </span>
                       </div>
-
-                      {/* Informative Tooltip */}
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-5 w-72 p-5 bg-gray-900/95 backdrop-blur-md text-white rounded-3xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-30 shadow-2xl border border-white/10 transform translate-y-3 group-hover:translate-y-0 scale-95 group-hover:scale-100">
                         <div className="font-black text-indigo-400 uppercase tracking-[0.2em] text-[10px] mb-3 pb-2 border-b border-white/10 flex items-center gap-2">
                           <Sparkles size={12} />
-                          {p.label} Profile
+                          {p.label} Analysis
                         </div>
                         <div className="font-medium opacity-90 leading-relaxed text-left text-[11px] text-gray-200">
                           {p.tooltip}
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                           <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-400/80">Architect Selection Guide</span>
-                           <Info size={10} className="text-white/20" />
                         </div>
                         <div className="absolute top-full left-1/2 -translate-x-1/2 border-[8px] border-transparent border-t-gray-900/95" />
                       </div>
@@ -216,31 +232,23 @@ const AutomationGeneratorView: React.FC = () => {
                       style={{ width: `${validation.progress}%` }} 
                     />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-tighter ${validation.isValid ? 'text-green-500' : 'text-gray-400'}`}>
-                    {description.length} chars
-                  </span>
                 </div>
               </div>
               <textarea
                 value={description}
                 onBlur={() => setTouched(true)}
                 onChange={handleDescriptionChange}
-                placeholder="Ex: When a new payment arrives in Stripe, query my Airtable for the customer, and if they are a 'Pro' user, send an automated Slack welcome message..."
+                placeholder="Ex: When a new row is added to Google Sheets, search Airtable for a matching record, then send a Slack notification..."
                 className={`w-full bg-gray-50 border rounded-2xl px-5 py-4 min-h-[160px] text-sm focus:ring-4 outline-none transition-all duration-300 placeholder:text-gray-300 leading-relaxed ${
                   touched && !validation.isValid ? 'border-orange-200 focus:ring-orange-100/50' : 'border-gray-100 focus:ring-indigo-500/10 focus:border-indigo-500'
                 }`}
               />
-              {touched && validation.isTooShort && (
-                <p className="text-[10px] text-orange-500 font-bold flex items-center gap-2 animate-in fade-in">
-                  <AlertTriangle size={12} /> Minimum requirement: {MIN_DESCRIPTION_LENGTH} chars.
-                </p>
-              )}
             </div>
 
             <button
               onClick={handleGenerate}
               disabled={state.loading || !validation.isValid}
-              className={`w-full py-4.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 transition-all duration-500 ${
+              className={`w-full py-4.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 transition-all duration-300 ${
                 state.loading || !validation.isValid
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-2xl shadow-indigo-500/40 active:scale-[0.97]'
@@ -275,18 +283,39 @@ const AutomationGeneratorView: React.FC = () => {
                  <Cpu size={36} className="text-white animate-spin-slow" />
                </div>
                <p className="text-sm font-black text-indigo-900 uppercase tracking-[0.4em] mb-2">Analyzing Architecture</p>
-               <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Optimizing for {platform} execution...</span>
+               <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Running Google Search verification...</span>
              </div>
           </div>
         )}
 
         {state.data && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-12 duration-1000 items-start">
-            {/* Logic Flow */}
             <Card title="Logical Strategy" subtitle={`Infrastructure: ${state.data.platform.toUpperCase()}`}>
-              <div className="relative mb-10 p-6 bg-indigo-50/30 rounded-3xl border border-indigo-100/50 shadow-inner-sm leading-relaxed text-sm italic text-gray-700">
+              <div className="relative mb-6 p-6 bg-indigo-50/30 rounded-3xl border border-indigo-100/50 shadow-inner-sm leading-relaxed text-sm italic text-gray-700">
                 "{state.data.explanation}"
               </div>
+
+              {state.data.sources && state.data.sources.length > 0 && (
+                <div className="mb-10 space-y-3">
+                  <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <Globe size={12} /> Verified Sources
+                  </h5>
+                  <div className="flex flex-wrap gap-2">
+                    {state.data.sources.map((source, idx) => (
+                      <a 
+                        key={idx} 
+                        href={source.uri} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-[10px] font-bold text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all"
+                      >
+                        <ExternalLink size={10} />
+                        {source.title.length > 20 ? source.title.substring(0, 20) + '...' : source.title}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="space-y-10 relative">
                 <div className="absolute left-[19px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-orange-400 via-indigo-400 to-indigo-100 opacity-20" />
@@ -300,11 +329,6 @@ const AutomationGeneratorView: React.FC = () => {
                     <div className="pt-1 flex-1">
                       <div className="flex items-center gap-2 mb-1.5">
                         <h4 className="font-extrabold text-gray-900 text-base tracking-tight">{step.title}</h4>
-                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                          step.type === 'trigger' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-indigo-50 border-indigo-100 text-indigo-600'
-                        }`}>
-                          {step.type}
-                        </span>
                       </div>
                       <p className="text-gray-500 text-xs font-medium leading-relaxed group-hover:text-gray-700 transition-colors">
                         {step.description}
@@ -315,7 +339,6 @@ const AutomationGeneratorView: React.FC = () => {
               </div>
             </Card>
 
-            {/* Implementation Details */}
             <div className="space-y-8">
               {state.data.codeSnippet && (
                 <Card 
@@ -335,7 +358,7 @@ const AutomationGeneratorView: React.FC = () => {
                   <div className="bg-[#0f1117] rounded-3xl overflow-hidden shadow-2xl border border-gray-800/50 group/code relative">
                     <div className="flex items-center gap-2 px-5 py-3 border-b border-white/5 bg-white/5">
                       <Terminal size={12} className="text-indigo-400" />
-                      <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Source Code</span>
+                      <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Implementation Code</span>
                     </div>
                     <pre className="p-6 text-indigo-300 font-mono text-[11px] leading-relaxed overflow-x-auto custom-scrollbar">
                       <code className="block py-2 opacity-90">{state.data.codeSnippet}</code>

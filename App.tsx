@@ -7,6 +7,8 @@ import AutomationGeneratorView from './views/AutomationGeneratorView';
 import ChatbotView from './views/ChatbotView';
 import ImageAnalysisView from './views/ImageAnalysisView';
 import TTSView from './views/TTSView';
+import LiveArchitectView from './views/LiveArchitectView';
+import LogicSandboxView from './views/LogicSandboxView';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>(AppView.GENERATOR);
@@ -17,6 +19,8 @@ const App: React.FC = () => {
       case AppView.CHATBOT: return <ChatbotView />;
       case AppView.IMAGE_ANALYSIS: return <ImageAnalysisView />;
       case AppView.TTS: return <TTSView />;
+      case AppView.LIVE_CONSULTANT: return <LiveArchitectView />;
+      case AppView.LOGIC_SANDBOX: return <LogicSandboxView />;
       default: return <AutomationGeneratorView />;
     }
   };
@@ -37,10 +41,12 @@ const App: React.FC = () => {
         </main>
 
         <footer className="px-10 py-3 border-t border-gray-50 bg-white/80 backdrop-blur-md flex items-center justify-between text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] hidden sm:flex shrink-0">
-          <span>AI Automation Architect • 2025</span>
+          <span>AI Automation Architect • Enterprise Edition 2.5</span>
           <div className="flex gap-4">
-             <span className="hover:text-indigo-600 cursor-pointer">API Documentation</span>
-             <span className="hover:text-indigo-600 cursor-pointer">Cloud Status</span>
+             <span className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors cursor-pointer">
+               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+               Logic Engine Online
+             </span>
           </div>
         </footer>
       </div>

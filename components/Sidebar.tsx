@@ -6,7 +6,9 @@ import {
   MessageCircle, 
   Eye, 
   Mic2, 
-  Layers 
+  Layers,
+  Radio,
+  FlaskConical
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -16,10 +18,12 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
   const navItems = [
-    { id: AppView.GENERATOR, label: 'Generator', icon: Workflow, color: 'text-blue-600' },
-    { id: AppView.CHATBOT, label: 'Assistant', icon: MessageCircle, color: 'text-purple-600' },
-    { id: AppView.IMAGE_ANALYSIS, label: 'Vision Scan', icon: Eye, color: 'text-green-600' },
-    { id: AppView.TTS, label: 'Voice AI', icon: Mic2, color: 'text-orange-600' },
+    { id: AppView.GENERATOR, label: 'Blueprint Gen', icon: Workflow, color: 'text-blue-600' },
+    { id: AppView.LOGIC_SANDBOX, label: 'Logic Sandbox', icon: FlaskConical, color: 'text-pink-600' },
+    { id: AppView.LIVE_CONSULTANT, label: 'Live Architect', icon: Radio, color: 'text-indigo-600' },
+    { id: AppView.CHATBOT, label: 'Advisor AI', icon: MessageCircle, color: 'text-purple-600' },
+    { id: AppView.IMAGE_ANALYSIS, label: 'Vision Extract', icon: Eye, color: 'text-green-600' },
+    { id: AppView.TTS, label: 'Voice Lab', icon: Mic2, color: 'text-orange-600' },
   ];
 
   return (
@@ -30,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
         </div>
         <div className="hidden lg:block">
           <h2 className="font-bold text-xl text-gray-900 leading-none">AutoArchitect</h2>
-          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">v2.0 Beta</span>
+          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">v2.5 Professional</span>
         </div>
       </div>
 
@@ -51,21 +55,26 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
               {isActive && (
                 <div className="absolute left-0 top-3 bottom-3 w-1 bg-indigo-600 rounded-r-full" />
               )}
-              <Icon size={22} className={`${isActive ? item.color : 'text-gray-400 group-hover:text-gray-600'}`} />
-              <span className={`hidden lg:block font-semibold ${isActive ? 'translate-x-1' : ''} transition-transform`}>
+              <Icon size={20} className={`${isActive ? item.color : 'text-gray-400 group-hover:text-gray-600'}`} />
+              <span className={`hidden lg:block font-bold text-sm ${isActive ? 'translate-x-1' : ''} transition-transform`}>
                 {item.label}
               </span>
+              {isActive && (
+                <div className="hidden lg:block ml-auto">
+                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                </div>
+              )}
             </button>
           );
         })}
       </nav>
 
-      <div className="p-6">
+      <div className="p-6 space-y-3">
         <div className="bg-gray-50 rounded-2xl p-4 hidden lg:block border border-gray-100">
-          <p className="text-xs font-bold text-gray-400 uppercase mb-2">System Status</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Architect Pulse</p>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium text-gray-700">All Systems Online</span>
+            <span className="text-xs font-bold text-gray-700">Systems Nominal</span>
           </div>
         </div>
       </div>

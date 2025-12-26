@@ -3,12 +3,19 @@ export enum AppView {
   GENERATOR = 'GENERATOR',
   CHATBOT = 'CHATBOT',
   IMAGE_ANALYSIS = 'IMAGE_ANALYSIS',
-  TTS = 'TTS'
+  TTS = 'TTS',
+  LIVE_CONSULTANT = 'LIVE_CONSULTANT',
+  LOGIC_SANDBOX = 'LOGIC_SANDBOX'
 }
 
-export type Platform = 'zapier' | 'n8n' | 'langchain' | 'make' | 'pipedream';
+export type Platform = 'zapier' | 'n8n' | 'langchain' | 'make' | 'pipedream' | 'google-sheets' | 'airtable' | 'shopify';
 
 export type StepType = 'trigger' | 'action' | 'logic';
+
+export interface GroundingSource {
+  title: string;
+  uri: string;
+}
 
 export interface AutomationStep {
   id: number;
@@ -22,6 +29,20 @@ export interface AutomationResult {
   steps: AutomationStep[];
   codeSnippet?: string;
   explanation: string;
+  sources?: GroundingSource[];
+}
+
+export interface SimulationStepResult {
+  stepId: number;
+  status: 'success' | 'failure' | 'skipped';
+  output: string;
+  reasoning: string;
+}
+
+export interface SimulationResponse {
+  overallStatus: 'success' | 'failure';
+  stepResults: SimulationStepResult[];
+  summary: string;
 }
 
 export interface ChatMessage {
